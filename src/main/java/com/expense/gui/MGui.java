@@ -1,6 +1,8 @@
 package com.expense.gui;
 import com.expense.dao.expensedao;
 import com.expense.model.Catemodel;
+import com.expense.model.Expensemodel;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -94,9 +96,17 @@ class CategoryGui extends JFrame {
         categoryTable.getSelectionModel().addListSelectionListener(
                 e->{
                     if(!e.getValueIsAdjusting()){
-                        //loadSelectedCategory();
+                        loadSelectedCategory();
                     }
                 });
+    }
+
+    private void loadSelectedCategory() {
+        int row = categoryTable.getSelectedRow();
+        if(row != -1){
+            String categoryName =  categoryTable.getValueAt(row, 1).toString();
+            titleField.setText(categoryName);
+        }
     }
 
     public void setupLayout(){
@@ -246,8 +256,278 @@ class CategoryGui extends JFrame {
         loadCategory();
         clearTable();
     }
-
 }
 class ExpenseGui extends JFrame {
+    private JTextField amountField;
+    private JTextArea descriptoinArea;
+    private JButton addButton;
+    private JButton refreshButton;
+    private JButton deleteButton;
+    private JButton updateButton;
+    private JComboBox<String> categoryComboBox;
+
+    private JTable expenseTable;
+    private DefaultTableModel tableModel;
+    private expensedao expenseDao;
+
+    public ExpenseGui(){
+        expenseDao = new expensedao();
+        initializeComponents();
+        setupLayout();
+        setupEventListeners();
+        loadExpense();
+    }
+
+    public void initializeComponents(){
+
+        amountField = new JTextField(20);
+        descriptoinArea = new JTextArea(1,20);
+        addButton = new JButton("Add");
+        refreshButton = new JButton("Refresh");
+        deleteButton = new JButton("Delete");
+        updateButton = new JButton("Update");
+        List<String> categories = new ArrayList<>();
+        try{
+            List<Catemodel> cate = expenseDao.getAllCategories();
+            for(Catemodel c: cate){
+                categories.add(c.getName());
+            }
+        }
+        catch(SQLException e){
+            JOptionPane.showMessageDialog(this,"Databse Failed : "+e.getMessage(),"Database Error",JOptionPane.ERROR_MESSAGE);
+        }
+
+        String[] categoriesArray = categories.toArray(new String[0]);
+
+
+        categoryComboBox = new JComboBox<>(categoriesArray);
+
+        String[] columnNames = {"Id","Amount","Description","Category","Created At"};
+
+        tableModel = new DefaultTableModel(columnNames,0){
+            @Override
+            public boolean isCellEditable(int row,int column){
+                return false;
+            }
+        };
+        expenseTable = new JTable(tableModel);
+
+        expenseTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        expenseTable.getSelectionModel().addListSelectionListener(
+                e->{
+                    if(!e.getValueIsAdjusting()){
+                        loadSelectedExpense();
+                    }
+                });
+    }
+
+    private void loadSelectedExpense() {
+        int row = expenseTable.getSelectedRow();
+        if(row != -1){
+            String amount = expenseTable.getValueAt(row,1).toString();
+            String description = expenseTable.getValueAt(row, 2).toString();
+            String category = expenseTable.getValueAt(row, 3).toString();
+
+            amountField.setText(amount);
+            descriptoinArea.setText(description);
+            categoryComboBox.setSelectedItem(category);
+        }
+    }
+
+    public void setupLayout(){
+        setTitle("Expenses");
+        setSize(1000,1200);
+
+        setLayout(new BorderLayout());
+
+        JPanel northPanel = new JPanel(new BorderLayout());
+
+        JPanel inputPanel = new JPanel();
+//        GridBagConstraints gbc = new GridBagConstraints();
+//        gbc.insets = new Insets(5,5,5,5);
+//        gbc.anchor = GridBagConstraints.CENTER;
+
+//        gbc.gridx = 0;
+//        gbc.gridy = 0;
+
+        inputPanel.add(new JLabel("Amount"));
+
+//        gbc.gridx = 1;
+//        gbc.gridy = 0;
+        inputPanel.add(amountField);
+
+//        gbc.gridx = 0;
+//        gbc.gridy = 1;
+        inputPanel.add(new JLabel("Description"));
+
+//        gbc.gridx = 1;
+//        gbc.gridy = 1;
+        inputPanel.add(descriptoinArea);
+
+
+//        gbc.gridx = 0;
+//        gbc.gridy = 2;
+        inputPanel.add(new JLabel("Category"));
+
+//        gbc.gridx = 1;
+//        gbc.gridy = 2;
+        inputPanel.add(categoryComboBox);
+
+
+        JPanel buttonsPanel = new JPanel();
+
+        buttonsPanel.add(addButton);
+        buttonsPanel.add(deleteButton);
+        buttonsPanel.add(updateButton);
+        buttonsPanel.add(refreshButton);
+
+        northPanel.add(inputPanel,BorderLayout.CENTER);
+        northPanel.add(buttonsPanel,BorderLayout.SOUTH);
+
+
+        add(northPanel,BorderLayout.NORTH);
+        add(new JScrollPane(expenseTable),BorderLayout.CENTER);
+    }
+    public void setupEventListeners(){
+        addButton.addActionListener((e)->{
+            addExpense();
+        });
+        updateButton.addActionListener((e)->{
+            updateExpense();
+        });
+        deleteButton.addActionListener((e)->{
+            deleteExpense();
+        });
+        refreshButton.addActionListener((e)->{
+            refreshExpense();
+        });
+    }
+    private void loadExpense(){
+        try{
+            List<Expensemodel> expense = expenseDao.getAllExpenses();
+            updateTable(expense);
+        }
+        catch(Exception e){
+            JOptionPane.showMessageDialog(this,"Database Error viv: "+e.getMessage(),"DataBase Error",JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    private void addExpense(){
+        String amount = amountField.getText();
+        String category = (categoryComboBox.getSelectedItem().toString()).trim();
+        String description = descriptoinArea.getText().trim();
+        int amt = 0;
+
+        if(amount.equals("")){
+            JOptionPane.showMessageDialog(this, "Enter a Amount","Invaild field",JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try{
+            amt = Integer.parseInt(amount);
+        }
+        catch(NumberFormatException e){
+            JOptionPane.showMessageDialog(this,"Enter a Number in Amount","Invaild Input",JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try{
+            if(expenseDao.createExpense(amt,category,description)>0){
+                JOptionPane.showMessageDialog(this,"Expense Added Successfully", "Success",JOptionPane.INFORMATION_MESSAGE);
+            }
+            else{
+                JOptionPane.showMessageDialog(this,"Failed to add expense", "Failed",JOptionPane.ERROR_MESSAGE);
+            }
+            loadExpense();
+            clearTable();
+        }
+        catch(SQLException e){
+            JOptionPane.showMessageDialog(this, "Database Failed "+e.getMessage(),"Database Error",JOptionPane.ERROR_MESSAGE);
+        }
+
+
+    }
+
+    private void updateExpense(){
+        int row = expenseTable.getSelectedRow();
+        if(row == -1){
+            JOptionPane.showMessageDialog(this,"Select a Category to update..","Invalid Update",JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int id = (int)expenseTable.getValueAt(row,0);
+        String amount = amountField.getText();
+        String description = descriptoinArea.getText();
+        String category = categoryComboBox.getSelectedItem().toString();
+        int amt = 0;
+
+        if(amount == ""){
+            JOptionPane.showMessageDialog(this,"Expense Amount is emty!","Invaild Category Name",JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try{
+            amt = Integer.parseInt(amount);
+        }
+        catch(NumberFormatException e){
+            JOptionPane.showMessageDialog(this,"Enter a Number in Amount","Invaild Input",JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try{
+            if(expenseDao.updateExpense(id,amt, description, category) > 0){
+                JOptionPane.showMessageDialog(this,"Expense updated Successfully","Update Success",JOptionPane.INFORMATION_MESSAGE);
+                loadExpense();
+                clearTable();
+            }
+            else{
+                JOptionPane.showMessageDialog(this, "Expense Update Failed","Update Failed",JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        catch(SQLException e){
+            JOptionPane.showMessageDialog(this,"Databse Failed while Updating - "+e.getMessage(),"Databse failed",JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void deleteExpense(){
+        int row = expenseTable.getSelectedRow();
+        if(row == -1){
+            JOptionPane.showMessageDialog(this,"Select a Expense to update..","Invalid Update",JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int id = (int)expenseTable.getValueAt(row,0);
+        try{
+            if(expenseDao.deleteExpense(id) > 0){
+                JOptionPane.showMessageDialog(this,"Expense deleted Successfully","Delete Success",JOptionPane.INFORMATION_MESSAGE);
+                loadExpense();
+                clearTable();
+            }
+            else{
+                JOptionPane.showMessageDialog(this, "Expense Delete Failed","Delete Failed",JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        catch(SQLException e){
+            JOptionPane.showMessageDialog(this,"Databse Failed while deleting - "+e.getMessage(),"Databse failed",JOptionPane.ERROR_MESSAGE);
+        }
+
+    }
+    private void refreshExpense(){
+        loadExpense();
+        clearTable();
+    }
+    public void clearTable(){
+        amountField.setText("");
+        descriptoinArea.setText("");
+    }
+    private void updateTable(List<Expensemodel> expense){
+        tableModel.setRowCount(0);
+        for(Expensemodel exp: expense){
+            Object[] row = {
+                    exp.getExpId(),
+                    exp.getAmount(),
+                    exp.getDescription(),
+                    exp.getCategory(),
+                    exp.getCreatedAt()
+            };
+            tableModel.addRow(row);
+        }
+    }
+
 
 }

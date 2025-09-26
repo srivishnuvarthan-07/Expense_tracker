@@ -1,6 +1,8 @@
+com\expense\model\Expensemodel.class
 com\expense\util\Database.class
 com\expense\dao\expensedao.class
 com\expense\gui\ExpenseGui.class
+com\expense\gui\ExpenseGui$1.class
 com\expense\model\Catemodel.class
 com\expense\gui\CategoryGui$1.class
 com\expense\gui\MGui.class
