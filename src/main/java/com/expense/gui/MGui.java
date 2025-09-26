@@ -34,32 +34,34 @@ public class MGui extends JFrame {
     private void setupLayout(){
         setLayout(new BorderLayout());
 
-        JPanel panel = new JPanel(new GridBagLayout());
+        JPanel panel = new JPanel();
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 2;
-        gbc.gridy = 2;
+//        GridBagConstraints gbc = new GridBagConstraints();
+//        gbc.gridx = 2;
+//        gbc.gridy = 2;
 
         JPanel buttonPanel = new JPanel(new FlowLayout());
 
         buttonPanel.add(expenseButton);
         buttonPanel.add(categoryButton);
 
-        panel.add(buttonPanel,gbc);
+        panel.add(buttonPanel);
         add(panel,BorderLayout.CENTER);
     }
     private void setupEventListeners(){
         expenseButton.addActionListener((e)->{
-            new ExpenseGui().setVisible(true);
+            setVisible(false);
+            new ExpenseGui();
         });
         categoryButton.addActionListener((e)->{
-            new CategoryGui().setVisible(true);
+            setVisible(false);
+            new CategoryGui();
         });
     }
 }
 
 class CategoryGui extends JFrame {
-
+    private JButton backButton;
     private JTextField titleField;
     private JButton addButton;
     private JButton refreshButton;
@@ -78,6 +80,7 @@ class CategoryGui extends JFrame {
     public void initializeComponents(){
 
         titleField = new JTextField(20);
+        backButton= new JButton("BACK");
         addButton = new JButton("Add");
         refreshButton = new JButton("Refresh");
         deleteButton = new JButton("Delete");
@@ -112,13 +115,15 @@ class CategoryGui extends JFrame {
     public void setupLayout(){
         setTitle("Category UI");
 
-        setSize(1000,1000);
+        setSize(600,600);
         setLocationRelativeTo(null);
 
         setLayout(new BorderLayout());
+        setVisible(true);
 
         JPanel northPanel = new JPanel(new BorderLayout());
-
+        JPanel firstpanel = new JPanel();
+        firstpanel.add(backButton,BorderLayout.NORTH);
         JPanel inputPanel = new JPanel();
 //        GridBagConstraints gbc = new GridBagConstraints();
 //        gbc.insets = new Insets(0,0,0,0);
@@ -141,6 +146,7 @@ class CategoryGui extends JFrame {
         buttonsPanel.add(updateButton);
         buttonsPanel.add(refreshButton);
 
+        northPanel.add(firstpanel,BorderLayout.WEST);
         northPanel.add(inputPanel,BorderLayout.NORTH);
         northPanel.add(buttonsPanel,BorderLayout.CENTER);
 
@@ -149,6 +155,9 @@ class CategoryGui extends JFrame {
     }
 
     public void setupEventListeners(){
+        backButton.addActionListener((e)->{
+            backfunction();
+        });
         addButton.addActionListener((e)->{
             addCategory();
         });
@@ -161,6 +170,10 @@ class CategoryGui extends JFrame {
         refreshButton.addActionListener((e)->{
             refreshCategory();
         });
+    }
+    private void backfunction(){
+        setVisible(false);
+        new MGui().setVisible(true);
     }
     private void loadCategory(){
         try{
@@ -258,6 +271,7 @@ class CategoryGui extends JFrame {
     }
 }
 class ExpenseGui extends JFrame {
+    private JButton backbutton;
     private JTextField amountField;
     private JTextArea descriptoinArea;
     private JButton addButton;
@@ -282,6 +296,7 @@ class ExpenseGui extends JFrame {
 
         amountField = new JTextField(20);
         descriptoinArea = new JTextArea(1,20);
+        backbutton = new JButton("Back");
         addButton = new JButton("Add");
         refreshButton = new JButton("Refresh");
         deleteButton = new JButton("Delete");
@@ -336,11 +351,14 @@ class ExpenseGui extends JFrame {
 
     public void setupLayout(){
         setTitle("Expenses");
-        setSize(1000,1200);
+        setSize(600,600);
 
         setLayout(new BorderLayout());
+        setLocationRelativeTo(null);
+        setVisible(true);
 
         JPanel northPanel = new JPanel(new BorderLayout());
+        JPanel firstPanel = new JPanel();
 
         JPanel inputPanel = new JPanel();
 //        GridBagConstraints gbc = new GridBagConstraints();
@@ -373,7 +391,7 @@ class ExpenseGui extends JFrame {
 //        gbc.gridy = 2;
         inputPanel.add(categoryComboBox);
 
-
+        firstPanel.add(backbutton);
         JPanel buttonsPanel = new JPanel();
 
         buttonsPanel.add(addButton);
@@ -382,6 +400,7 @@ class ExpenseGui extends JFrame {
         buttonsPanel.add(refreshButton);
 
         northPanel.add(inputPanel,BorderLayout.CENTER);
+        northPanel.add(firstPanel,BorderLayout.WEST);
         northPanel.add(buttonsPanel,BorderLayout.SOUTH);
 
 
@@ -401,7 +420,16 @@ class ExpenseGui extends JFrame {
         refreshButton.addActionListener((e)->{
             refreshExpense();
         });
+        backbutton.addActionListener((e)->{
+            backfunction();
+        });
     }
+
+    private void backfunction() {
+        setVisible(false);
+        new MGui().setVisible(true);
+    }
+
     private void loadExpense(){
         try{
             List<Expensemodel> expense = expenseDao.getAllExpenses();
