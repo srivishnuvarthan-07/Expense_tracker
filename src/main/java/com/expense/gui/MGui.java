@@ -117,7 +117,7 @@ class CategoryGui extends JFrame {
 
         setSize(600,600);
         setLocationRelativeTo(null);
-
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         setVisible(true);
 
@@ -294,8 +294,8 @@ class ExpenseGui extends JFrame {
 
     public void initializeComponents(){
 
-        amountField = new JTextField(20);
-        descriptoinArea = new JTextArea(1,20);
+        amountField = new JTextField(10);
+        descriptoinArea = new JTextArea(1,10);
         backbutton = new JButton("Back");
         addButton = new JButton("Add");
         refreshButton = new JButton("Refresh");
@@ -352,7 +352,7 @@ class ExpenseGui extends JFrame {
     public void setupLayout(){
         setTitle("Expenses");
         setSize(600,600);
-
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         setLocationRelativeTo(null);
         setVisible(true);
@@ -399,8 +399,8 @@ class ExpenseGui extends JFrame {
         buttonsPanel.add(updateButton);
         buttonsPanel.add(refreshButton);
 
-        northPanel.add(inputPanel,BorderLayout.CENTER);
-        northPanel.add(firstPanel,BorderLayout.WEST);
+        northPanel.add(inputPanel,BorderLayout.NORTH);
+        northPanel.add(firstPanel,BorderLayout.CENTER);
         northPanel.add(buttonsPanel,BorderLayout.SOUTH);
 
 
